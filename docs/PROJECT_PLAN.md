@@ -13,7 +13,7 @@ The final product answers the questions fans and analysts actually ask (surface 
 ## Progress
 
 - [x] Phase 0 — Setup
-- [ ] Phase 1 — Explore the data
+- [x] Phase 1 — Explore the data
 - [ ] Phase 2 — Database design
 - [ ] Phase 3 — Ingestion pipeline
 - [ ] Phase 4 — Stats layer

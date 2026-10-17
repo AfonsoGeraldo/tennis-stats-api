@@ -55,4 +55,12 @@ def build_players(players_raw):
         print("There's an error while building players : ", e)
         return None
 
-# def build_matches(matches_raw):
+def build_matches(matches_raw):
+    try:
+        matches = matches_raw[['tourney_id', 'match_num', 'round', 'winner_id', 'loser_id', 'winner_rank', 'loser_rank', 'score']].copy()
+        matches['is_wo'] = matches['score'].str.contains('W/O', na=False)
+        matches['is_retirement'] = matches['score'].str.contains('RET', na=False)
+        return matches
+    except Exception as e:
+        print("There's an error while building matches : ", e)
+        return None

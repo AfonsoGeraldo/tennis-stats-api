@@ -47,3 +47,6 @@
 
 ## Schema
 - Defined in `sql/schema.sql`, which is the source of truth: database changes go through the script, never by hand
+
+## Open issues
+- 48 players have no `name_last`, but the schema defines it as NOT NULL. The load will fail until this is resolved (make the column nullable, or drop these players if none appear in matches).

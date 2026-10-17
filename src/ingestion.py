@@ -37,8 +37,22 @@ def convert_date(series):
         return None
     
 
-# def build_tournaments(matches_raw):
+def build_tournaments(matches_raw):
+    try:
+        tourneys = matches_raw[['tourney_id', 'tourney_name', 'tourney_date', 'tourney_level', 'surface']].drop_duplicates().copy()
+        tourneys['tourney_date'] = convert_date(tourneys['tourney_date'])
+        return tourneys
+    except Exception as e:
+        print("There's an error while building tournaments : ", e)
+        return None
 
-# def build_players(players_raw): 
+def build_players(players_raw):
+    try:
+        players = players_raw[['player_id', 'name_first','name_last','hand', 'dob', 'ioc', 'height']].copy()
+        players['dob'] = convert_date(players['dob'])
+        return players
+    except Exception as e:
+        print("There's an error while building players : ", e)
+        return None
 
 # def build_matches(matches_raw):

@@ -50,3 +50,32 @@
 
 ## Open issues
 - 48 players have no `name_last`, but the schema defines it as NOT NULL. The load will fail until this is resolved (make the column nullable, or drop these players if none appear in matches).
+# Phase 3 — Ingestion Pipeline: Decisions
+
+## Structure
+- Extract, transform, and load functions live in `src/ingestion.py`; `src/run_ingestion.py` orchestrates them
+- Extract functions only read raw files; each transform function returns a DataFrame shaped exactly like one table
+- Every function returns `None` or `False` on failure, and the orchestrator stops at the first failed step
+- Run from the project root: `python src/run_ingestion.py`
+
+## Re-run strategy
+- Full refresh: all tables are emptied and reloaded on every run, chosen because the data is static and small (~9,000 matches)
+- Tables are cleared only after extract and transform succeed, so a failed run never leaves the database empty
+- Deletion order: `TennisMatch` first, then `Tournament` and `Player` (children before parents); load order is the reverse
+- `TRUNCATE` is not used because SQL Server does not allow it on tables referenced by foreign keys
+- The `TennisMatch` identity is reseeded after clearing, so `match_id` restarts on each run
+- Clearing runs in a single transaction (`engine.begin()`), so it either fully succeeds or rolls back
+- Known limitation: the loads are not in one shared transaction, so a failure mid-load can leave the database partially filled until the next successful run (improvement planned for Phase 7)
+
+## Data handling
+- 48 players without `name_last` are dropped in `build_players`. None of them appear in the 2023–2025 matches. If a future season includes such a player, the TennisMatch load will fail on the foreign key, and this decision must be revisited
+- 102 players have a `dob` that cannot be parsed; they become NULL. None appear in the 2023–2025 matches
+- `tourney_id` widened to `VARCHAR(50)` (in both `Tournament` and `TennisMatch`) because Davis Cup IDs are up to 32 characters
+
+## Schema
+- `schema.sql` drops and recreates the database (forcing single-user mode to close open connections), so it can be rerun at any time
+- This is acceptable only because it is a local development database
+
+## Verification
+- Row counts after loading match the source: 445 tournaments, 9,006 matches, all players minus 48
+- Running the pipeline twice gives identical counts, confirming the re-run strategy works

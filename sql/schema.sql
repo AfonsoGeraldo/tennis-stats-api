@@ -1,3 +1,13 @@
+USE master;
+GO
+
+IF DB_ID('Tennis') IS NOT NULL
+BEGIN
+    ALTER DATABASE Tennis SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE Tennis;
+END
+GO
+
 CREATE DATABASE Tennis;
 GO
 
@@ -5,7 +15,7 @@ USE Tennis;
 GO
 
 CREATE TABLE Tournament (
-    tourney_id     VARCHAR(20)  NOT NULL,
+    tourney_id     VARCHAR(50)  NOT NULL,
     tourney_name   VARCHAR(100) NOT NULL,
     tourney_date   DATE         NOT NULL,
     tourney_level  VARCHAR(5)   NOT NULL,
@@ -26,7 +36,7 @@ CREATE TABLE Player (
 
 CREATE TABLE TennisMatch (
     match_id       INT IDENTITY(1,1) NOT NULL,
-    tourney_id     VARCHAR(20)  NOT NULL,
+    tourney_id     VARCHAR(50)  NOT NULL,
     match_num      INT          NOT NULL,
     round          VARCHAR(10)  NOT NULL,
     winner_id      INT          NOT NULL,

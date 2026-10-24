@@ -43,13 +43,35 @@ def get_head_to_head(player1_id, player2_id, engine):
                     """)
         df = pd.read_sql(query, engine, params={"player1_id": player1_id, "player2_id": player2_id})
         return df
-    except Excpetion as e:
+    except Exception as e:
         print("There was an error while loading h2h: ", e)
         return None
 
+def get_head_to_head_summary(matches, player1_id, player2_id):
+    try:
+        if matches is None: 
+            print("There are no matches to check the h2h.")
+            return None
+        
+        counts = matches['winner_id'].value_counts()
+        player1_count = counts.get(player1_id, 0)
+        player2_count = counts.get(player2_id, 0)
+
+        h2h = {
+            "player1_wins": int(player1_count),
+            "player2_wins": int(player2_count),
+            "total" : int(player1_count + player2_count)
+        }
+
+        return h2h
+    except Exception as e:
+        print("There was an error while counting h2h: ", e)
+        return None
 
 if __name__ == "__main__":
     engine = get_engine()
+    matches = get_head_to_head(207989, 206173, engine)
     print(get_surface_win_rates(999999999, engine))
     print(get_head_to_head(207989, 206173, engine))
+    print(get_head_to_head_summary(matches, 207989, 206173))
     #207989

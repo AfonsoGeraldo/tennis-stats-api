@@ -68,10 +68,48 @@ def get_head_to_head_summary(matches, player1_id, player2_id):
         print("There was an error while counting h2h: ", e)
         return None
 
+
+def get_recent_form(player_id, last, engine):
+    try:
+        query = text("""
+                    select
+                        top (:last) 
+                        t.tourney_date, 
+                        t.tourney_name, 
+                        t.surface, 
+                        tm.[round],
+                        case
+                            when tm.winner_id = :player_id then	tm.loser_id
+                            else tm.winner_id
+                        end as opponent_id,
+                        case
+                            when tm.winner_id = :player_id then	'W'
+                            else 'L'
+                        end as result,
+                        tm.score
+                    from TennisMatch tm
+                    inner join Tournament t
+                    on
+                        tm.tourney_id = t.tourney_id
+                    where
+                        (tm.winner_id = :player_id 
+                        or tm.loser_id = :player_id)
+                        and tm.is_wo = 0
+                    order by
+                        t.tourney_date desc,
+                        tm.match_num desc
+                """)
+        df = pd.read_sql(query, engine, params={"player_id": player_id, "last": last})
+        return df
+    except Exception as e:
+        print("There was an error while loading recent form: ", e)
+        return None
+
 if __name__ == "__main__":
     engine = get_engine()
     matches = get_head_to_head(207989, 206173, engine)
     print(get_surface_win_rates(999999999, engine))
     print(get_head_to_head(207989, 206173, engine))
     print(get_head_to_head_summary(matches, 207989, 206173))
+    print(get_recent_form(207989, 10, engine))
     #207989

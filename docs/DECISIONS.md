@@ -79,3 +79,38 @@
 ## Verification
 - Row counts after loading match the source: 445 tournaments, 9,006 matches, all players minus 48
 - Running the pipeline twice gives identical counts, confirming the re-run strategy works
+
+# Phase 4 — Stats Layer: Decisions
+
+## Structure
+- Stats functions live in `src/stats.py`: `get_surface_win_rates`, `get_head_to_head`, `get_head_to_head_summary`, `get_recent_form`
+- Each function answers one question and will back one API endpoint in Phase 6
+
+## SQL vs pandas
+- Filtering, joining, and aggregating are done in SQL (e.g. `GROUP BY surface`), and results are loaded with `pd.read_sql`, because the data already lives in the database and SQL is built for this
+- Python handles what SQL makes awkward, or what doesn't need the database at all
+- `get_head_to_head_summary` is a separate, pure-pandas function: it receives the match list and counts wins (`value_counts` on `winner_id`), so it needs no database and is easy to test
+
+## Which matches count
+- Walkovers (`is_wo = 1`) are excluded from every stat: they were never played
+- Retirements are counted: a real (partial) match was played and there is a real winner (e.g. Cincinnati 2025 final, Alcaraz vs Sinner, `5-0 RET`, counts as a win)
+
+## Query safety
+- All queries use bound parameters (`:player_id`, `:last` with `params=`), never f-strings, to prevent SQL injection once values come from API callers
+
+## Ordering
+- Matches are ordered by `tourney_date`, then `match_num`, because all matches in a tournament share the tournament's start date
+- Assumption: `match_num` follows round order within a tournament (verified on the 2023 Australian Open, R128 → F; not checked for round-robin or Davis Cup formats). The Elo engine relies on the same assumption
+
+## Return values
+- `None` means a step failed (connection or query error) → the API will return 500
+- An empty DataFrame means the query worked but found nothing (no matches, or unknown player) → the API will return 404
+- `get_head_to_head_summary` returns plain Python `int`s in a dictionary, so it serialises to JSON directly
+
+## Verification
+- `get_surface_win_rates` matches an independent SQL query run in SSMS
+- Head-to-head Alcaraz vs Sinner (2023–2025): 8–4 in 12 matches, matching a hand count of the match list
+- `get_recent_form` matches the same query run in SSMS
+
+## Notes for Phase 6
+- Validate `last` in the API (e.g. between 1 and 50) and return 400 for invalid values

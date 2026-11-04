@@ -1,5 +1,6 @@
 from db_utils import get_engine
 from ingestion import read_players, read_matches, build_players, build_tournaments, build_matches, clear_tables, load_table
+from elo import compute_elo, read_elo_matches 
 
 def run_ingestion(years):
 
@@ -44,6 +45,20 @@ def run_ingestion(years):
         load_matches = load_table(matches, "TennisMatch", engine)
         if not load_matches:
             print("There was an error while loading matches.")
+            return False
+
+        # 5. Calculate eloRatings
+        print("Computing Elo ratings...")
+        elo_matches = read_elo_matches(engine)
+        if elo_matches is None:
+            print("There was an error while reading matches for Elo.")
+            return False
+
+        elo_ratings = compute_elo(elo_matches)
+
+        load_elo_ratings = load_table(elo_ratings, "EloRating", engine)
+        if not load_elo_ratings:
+            print("There was an error while loading elo ratings.")
             return False
         
         print("Success!")

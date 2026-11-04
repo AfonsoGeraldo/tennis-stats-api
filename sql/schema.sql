@@ -52,3 +52,16 @@ CREATE TABLE TennisMatch (
     CONSTRAINT FK_TennisMatch_Winner FOREIGN KEY (winner_id) REFERENCES Player (player_id),
     CONSTRAINT FK_TennisMatch_Loser FOREIGN KEY (loser_id) REFERENCES Player (player_id)
 );
+
+CREATE TABLE EloRating (
+    elo_rating_id  INT IDENTITY(1,1) NOT NULL,
+    player_id      INT          NOT NULL,
+    match_id       INT          NOT NULL,
+    rating_type    VARCHAR(10)  NOT NULL,
+    rating         DECIMAL(7,2) NOT NULL,
+    CONSTRAINT PK_EloRating PRIMARY KEY (elo_rating_id),
+    CONSTRAINT UQ_EloRating_PlayerMatchType UNIQUE (player_id, match_id, rating_type),
+    CONSTRAINT FK_EloRating_Player FOREIGN KEY (player_id) REFERENCES Player (player_id),
+    CONSTRAINT FK_EloRating_Match FOREIGN KEY (match_id) REFERENCES TennisMatch (match_id),
+    CONSTRAINT CK_EloRating_Type CHECK (rating_type IN ('Overall', 'Hard', 'Clay', 'Grass'))
+);

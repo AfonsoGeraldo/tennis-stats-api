@@ -1,4 +1,5 @@
 import pandas as pd
+from sqlalchemy import text
 
 def expected_score(rating_a, rating_b):
     return 1 / (1 + 10 ** ((rating_b - rating_a) / 400))
@@ -53,3 +54,19 @@ def compute_elo(matches):
 
     return pd.DataFrame(rows)
 
+def read_elo_matches(engine):
+    try:
+        query = text("""select
+                        tm.match_id, t.tourney_date, tm.match_num, tm.winner_id, tm.loser_id, t.surface 
+                    from TennisMatch tm
+                    inner join Tournament t
+                    on
+                        tm.tourney_id = t.tourney_id
+                    where
+                        tm.is_wo = 0
+                    order by tourney_date, match_num""")
+        df = pd.read_sql(query, engine)
+        return df   
+    except Exception as e:
+        print("There was an error while reading elo matches: ", e)
+        return None

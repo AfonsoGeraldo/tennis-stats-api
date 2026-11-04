@@ -81,6 +81,8 @@ def load_table(df, table_name, engine):
 def clear_tables(engine):
     try:
         with engine.begin() as conn:
+            conn.execute(text("DELETE FROM EloRating"))
+            conn.execute(text("DBCC CHECKIDENT ('EloRating', RESEED, 0)"))
             conn.execute(text("DELETE FROM TennisMatch"))
             conn.execute(text("DBCC CHECKIDENT ('TennisMatch', RESEED, 0)"))
             conn.execute(text("DELETE FROM Player"))

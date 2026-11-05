@@ -105,11 +105,56 @@ def get_recent_form(player_id, last, engine):
         print("There was an error while loading recent form: ", e)
         return None
 
+
+def get_elo_ranking(rating_type, limit, engine):
+    try:
+        query = text(
+            """
+            ;WITH latest AS (
+            SELECT
+                er.player_id,
+                er.rating,
+                t.tourney_date AS last_match_date,
+                ROW_NUMBER() OVER (
+                    PARTITION BY er.player_id
+                    ORDER BY t.tourney_date DESC, tm.match_num DESC
+                ) AS rn
+            FROM EloRating er
+            INNER JOIN TennisMatch tm ON tm.match_id = er.match_id
+            INNER JOIN Tournament t   ON t.tourney_id = tm.tourney_id
+            WHERE er.rating_type = :rating_type
+        )
+        SELECT TOP (:limit)
+            p.player_id,
+            p.name_first,
+            p.name_last,
+            l.rating,
+            l.last_match_date
+        FROM latest l
+        INNER JOIN Player p ON p.player_id = l.player_id
+        WHERE l.rn = 1
+        ORDER BY l.rating DESC;
+            """
+        )
+        df = pd.read_sql(query, engine, params={"limit": limit, "rating_type": rating_type})
+        return df
+    except Exception as e:
+            print("There was an error while loading elo ranking: ", e)
+            return None 
+
+
 if __name__ == "__main__":
     engine = get_engine()
     matches = get_head_to_head(207989, 206173, engine)
-    print(get_surface_win_rates(999999999, engine))
-    print(get_head_to_head(207989, 206173, engine))
-    print(get_head_to_head_summary(matches, 207989, 206173))
-    print(get_recent_form(207989, 10, engine))
+    # print(get_surface_win_rates(999999999, engine))
+    # print(get_head_to_head(207989, 206173, engine))
+    # print(get_head_to_head_summary(matches, 207989, 206173))
+    # print(get_recent_form(207989, 10, engine))
+    print(get_elo_ranking('Overall', 10, engine))
+    print("CLAY \n")
+    print(get_elo_ranking('Clay', 10, engine))
+    print("GRASS \n")
+    print(get_elo_ranking('Grass', 10, engine))
+    print("HARD \n")
+    print(get_elo_ranking('Hard', 10, engine))
     #207989

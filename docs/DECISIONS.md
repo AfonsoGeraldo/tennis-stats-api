@@ -148,3 +148,28 @@
 ## Known limitations
 - The data starts in January 2023, so every player starts at 1500 at that point; ratings in the first months are a warm-up and less reliable
 - Surface ratings settle more slowly than the overall rating, especially on grass (short season)
+
+## Implementation
+- `src/elo.py`: `expected_score`, `update_ratings`, `compute_elo`, `read_elo_matches`
+- `update_ratings` raises `ValueError` on invalid input instead of returning None: it is a pure calculation, so bad input is a bug in the caller and should fail loudly
+- Ratings are kept at full precision during the calculation; rounding happens only on storage (DECIMAL(7,2)) and display
+- `compute_elo` sorts its input by `tourney_date` and `match_num` itself, so its correctness doesn't depend on the caller
+- `compute_elo` expects only played matches; excluding walkovers is the job of the extract step (`read_elo_matches`, `is_wo = 0`)
+- Current ratings live in dictionaries during the loop (`player_id → rating`, and one dictionary per surface); the history is collected in a list of rows and turned into a DataFrame at the end
+- Elo runs as step 5 of `run_ingestion`, after the loads, reusing `load_table`; `clear_tables` deletes `EloRating` first
+
+## Ranking
+- `get_elo_ranking(rating_type, limit, engine)` in `stats.py` returns each player's latest rating of the given type (via `ROW_NUMBER() OVER (PARTITION BY player_id ...)`), highest first
+- All players are included, active or not: a player who stopped playing keeps his last rating (e.g. Jack Draper, last match August 2025, ranked #6). An activity filter is a possible later improvement
+
+## Verification
+- `update_ratings` reproduces the hand calculations: +4.8 (favourite wins), +16 (equal players), +27.2 (upset)
+- `compute_elo` tested on small hand-made DataFrames: rating carried between matches, shuffled input gives identical results, surface ratings independent from overall
+- Full data: 8,944 played matches → 35,670 rating rows (17,888 overall + 17,782 surface; 53 matches without a surface update only the overall rating)
+- Running the pipeline twice gives the same counts
+- Full rebuild from `schema.sql` followed by the pipeline reproduces all four tables
+- Sanity check: the overall top 10 (Sinner, Alcaraz, Djokovic, Zverev, Auger-Aliassime, Draper, Fritz, De Minaur, Bublik, Musetti) matches the expected elite for late 2025. Sinner ranks above Alcaraz, unlike the official ATP year-end ranking, because Elo measures results against opponents' strength rather than ranking points
+
+## Notes for later phases
+- The CSV files are not in the repository (`data/*.csv` is ignored), so a fresh clone has no data: the README must explain where to download them and where to put them (Phase 7)
+- The orchestrator could check the read step before the build step, to stop with one clear error instead of a cascade

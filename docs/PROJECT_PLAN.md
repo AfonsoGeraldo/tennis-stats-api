@@ -17,7 +17,7 @@ The final product answers the questions fans and analysts actually ask (surface 
 - [x] Phase 2 — Database design
 - [x] Phase 3 — Ingestion pipeline
 - [x] Phase 4 — Stats layer
-- [ ] Phase 5 — Elo engine
+- [x] Phase 5 — Elo engine
 - [ ] Phase 6 — API
 - [ ] Phase 7 — Quality
 - [ ] Phase 8 — Dashboard

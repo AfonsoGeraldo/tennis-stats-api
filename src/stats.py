@@ -58,7 +58,9 @@ def get_head_to_head_summary(matches, player1_id, player2_id):
         player2_count = counts.get(player2_id, 0)
 
         h2h = {
+            "player1_id": player1_id,
             "player1_wins": int(player1_count),
+            "player2_id": player2_id,
             "player2_wins": int(player2_count),
             "total" : int(player1_count + player2_count)
         }
@@ -139,8 +141,8 @@ def get_elo_ranking(rating_type, limit, engine):
         df = pd.read_sql(query, engine, params={"limit": limit, "rating_type": rating_type})
         return df
     except Exception as e:
-            print("There was an error while loading elo ranking: ", e)
-            return None 
+        print("There was an error while loading elo ranking: ", e)
+        return None 
 
 
 if __name__ == "__main__":

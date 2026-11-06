@@ -173,3 +173,43 @@
 ## Notes for later phases
 - The CSV files are not in the repository (`data/*.csv` is ignored), so a fresh clone has no data: the README must explain where to download them and where to put them (Phase 7)
 - The orchestrator could check the read step before the build step, to stop with one clear error instead of a cascade
+
+# Phase 6 — API: Decisions
+
+## Framework and running
+- FastAPI for the endpoints, uvicorn as the server, both added to `requirements.txt`
+- The API lives in `src/api.py`; run from the project root with `uvicorn api:app --reload --app-dir src`
+- Interactive documentation is generated automatically at `/docs` (Swagger UI)
+- The database engine is created once when the API starts and reused by every request
+
+## Endpoints
+| Method | Endpoint | Calls |
+|---|---|---|
+| GET | `/health` | — |
+| GET | `/rankings/elo?rating_type=&limit=` | `get_elo_ranking` |
+| GET | `/players/{player_id}/surfaces` | `get_surface_win_rates` |
+| GET | `/players/{player_id}/form?last=` | `get_recent_form` |
+| GET | `/h2h?player1_id=&player2_id=` | `get_head_to_head` + `get_head_to_head_summary` |
+
+## Parameters
+- Path parameters identify the resource (`player_id`); query parameters are options and filters (`rating_type`, `limit`, `last`, the two players in `/h2h`)
+- Type hints (`: int`) let FastAPI convert and validate values automatically
+- `limit` and `last` restricted to 1–50 with `Query(10, ge=1, le=50)`
+- `rating_type` must be one of Overall, Hard, Clay, Grass
+
+## Status codes
+- 200: success
+- 400: invalid request detected by our own checks (unknown `rating_type`, same player twice in `/h2h`)
+- 422: invalid request detected by FastAPI's validation (wrong type, missing required parameter, `limit`/`last` out of range)
+- 404: the query worked but found nothing (empty DataFrame), e.g. unknown player, no matches in 2023–2025, or two players who never met
+- 500: a stats function returned None (database or query failure)
+- Checks are ordered: validate input first, then `None` before `.empty`
+
+## Responses
+- DataFrames are returned as lists of objects (`df.to_dict(orient="records")`)
+- `/h2h` returns one object with `summary` (including both player IDs) and `matches`
+
+## Known limitations
+- A 404 from player endpoints doesn't distinguish "player doesn't exist" from "player has no matches"; telling them apart would need an extra query
+- No authentication: acceptable for a local portfolio project
+- Error paths (404, 500) were not all tested by hand; automated tests in Phase 7 will cover them

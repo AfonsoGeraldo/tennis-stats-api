@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query, HTTPException
 import sys
 sys.path.append('../src')
 from db_utils import get_engine
-from stats import get_elo_ranking, get_surface_win_rates, get_recent_form
+from stats import get_elo_ranking, get_surface_win_rates, get_recent_form, get_head_to_head, get_head_to_head_summary
 
 app = FastAPI(title="Tennis Stats API")
 
@@ -58,4 +58,28 @@ def recent_form(player_id: int, last: int = Query(10, ge=1, le=50)):
     if df.empty:
         raise HTTPException(status_code=404, detail="No matches found for the selected player between 2023-2025.")
     
-    return df.to_dict(orient="records")    
+    return df.to_dict(orient="records")
+
+@app.get("/h2h")
+def h2h(player1_id: int, player2_id: int):
+
+    if player1_id == player2_id:
+        raise HTTPException(status_code=400, detail="Player 1 and player 2 can not be the same.")
+
+    matches = get_head_to_head(player1_id, player2_id, engine)
+
+    if matches is None:
+        raise HTTPException(status_code=500, detail="Could not get h2h for selected players.")
+
+    if matches.empty:
+        raise HTTPException(status_code=404, detail="There are no matches between the players.")
+
+    summary = get_head_to_head_summary(matches, player1_id, player2_id)
+    if summary is None:
+        raise HTTPException(status_code=500, detail="Could not get h2h for selected players.")
+    
+    response = {
+        "summary": summary,
+        "matches": matches.to_dict(orient="records")
+    }
+    return response

@@ -1,4 +1,5 @@
 from elo import update_ratings, compute_elo
+from stats import get_head_to_head_summary
 import pandas as pd
 import pytest
 
@@ -55,7 +56,7 @@ def test_compute_elo_shuffled_input():
 })
     ratings = compute_elo(matches)
     player10_ratings_overall = ratings[(ratings['player_id'] == 10)  & (ratings['match_id'] == 2) & (ratings['rating_type'] == 'Overall')]    
-    assert player10_ratings_overall['rating'].iloc[0] == pytest.approx(1531.26, abs=0.01), "Clay ratings were not well calculated."
+    assert player10_ratings_overall['rating'].iloc[0] == pytest.approx(1531.26, abs=0.01), "Rating changed when input order changed."
 
 def test_compute_elo_surfaces_are_independent():
     matches = pd.DataFrame({
@@ -72,3 +73,34 @@ def test_compute_elo_surfaces_are_independent():
     player10_ratings_clay = ratings[(ratings['player_id'] == 10)  & (ratings['match_id'] == 2) & (ratings['rating_type'] == 'Clay')]
     assert player10_ratings_overall['rating'].iloc[0] == pytest.approx(1531.26, abs=0.01), "Overall ratings were not well calculated."
     assert player10_ratings_clay['rating'].iloc[0] == pytest.approx(1516.00, abs=0.01), "Clay ratings were not well calculated."
+
+def test_head_to_head_summary_counts_wins():
+    matches = pd.DataFrame({'winner_id': [10, 20, 10]})
+
+    summary = get_head_to_head_summary(matches, 10, 20)
+
+    assert summary == {
+        "player1_id": 10,
+        "player1_wins": 2,
+        "player2_id": 20,
+        "player2_wins": 1,
+        "total": 3,
+    }
+
+
+def test_head_to_head_summary_player_never_won():
+    matches = pd.DataFrame({'winner_id': [10, 10, 10]})
+
+    summary = get_head_to_head_summary(matches, 10, 20)
+
+    assert summary == {
+        "player1_id": 10,
+        "player1_wins": 3,
+        "player2_id": 20,
+        "player2_wins": 0,
+        "total": 3,
+    }
+
+
+def test_head_to_head_summary_none_input():
+    assert get_head_to_head_summary(None, 10, 20) is None

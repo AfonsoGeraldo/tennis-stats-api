@@ -1,0 +1,75 @@
+2026-11-23 22:47:38,082 | INFO | __main__ | Reading data...
+2026-11-23 22:47:38,084 | ERROR | ingestion | Error while extracting players data.
+Traceback (most recent call last):
+  File "C:\Users\afons\source\repos\tennis-stats-api\src\ingestion.py", line 10, in read_players
+    df_players = pd.read_csv('data/atp_players.csv', dtype={'wikidata_id': str})
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 872, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1643, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1907, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\common.py", line 930, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'data/atp_players.csv'
+2026-11-23 22:47:38,098 | ERROR | ingestion | Error while extracting matches data.
+Traceback (most recent call last):
+  File "C:\Users\afons\source\repos\tennis-stats-api\src\ingestion.py", line 21, in read_matches
+    df = pd.read_csv(f'data/atp_matches_{year}.csv')
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 872, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1643, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1907, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\afons\source\repos\tennis-stats-api\venv\Lib\site-packages\pandas\io\common.py", line 930, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'data/atp_matches_2023.csv'
+2026-11-23 22:47:38,108 | ERROR | __main__ | Players were not imported. Please check the CSV players file.
+2026-11-23 22:55:32,941 | INFO | __main__ | Reading data...
+2026-11-23 22:55:33,030 | INFO | ingestion | Read 66912 players
+2026-11-23 22:55:33,090 | INFO | ingestion | Read 9006 matches
+2026-11-23 22:55:33,091 | INFO | __main__ | Building data...
+2026-11-23 22:55:33,124 | WARNING | ingestion | 102 values in 'dob' could not be parsed as dates
+2026-11-23 22:55:33,124 | INFO | ingestion | Built 66864 players.
+2026-11-23 22:55:33,132 | INFO | ingestion | Built 445 tournaments.
+2026-11-23 22:55:33,136 | INFO | ingestion | Built 9006 matches.
+2026-11-23 22:55:33,137 | INFO | __main__ | Clearing tables...
+2026-11-23 22:55:35,685 | INFO | ingestion | Tables cleared.
+2026-11-23 22:55:35,685 | INFO | __main__ | Loading tables...
+2026-11-23 22:57:24,543 | INFO | ingestion | Loaded 66864 rows into Player
+2026-11-23 22:57:25,134 | INFO | ingestion | Loaded 445 rows into Tournament
+2026-11-23 22:57:34,306 | INFO | ingestion | Loaded 9006 rows into TennisMatch
+2026-11-23 22:57:34,306 | INFO | __main__ | Computing Elo ratings...
+2026-11-23 22:57:36,556 | INFO | ingestion | Loaded 35670 rows into EloRating
+2026-11-23 22:57:36,556 | INFO | __main__ | Success!
